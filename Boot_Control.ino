@@ -1,7 +1,7 @@
 
-#include <Wire.h>  
-#include <LiquidCrystal_I2C.h>
-LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // Set the LCD I2C address
+//#include <Wire.h>  
+//#include <LiquidCrystal_I2C.h>
+//LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // Set the LCD I2C address
  
 int analogPin0 = 1;
 int analogPin1 = 0;
@@ -28,17 +28,19 @@ void setup() {
  digitalWrite(interruptPinUp, HIGH);
  digitalWrite(interruptPinDown, HIGH);
  
-  
+/*  
  // lcd.init(); 
   lcd.backlight();
   lcd.begin(16,2);
+  */
   pinMode(buzzer, OUTPUT);
   Serial.begin(9600);
-
+/*
   lcd.clear();
    lcd.setCursor(0,0);  
    //lcd.print("1234567890123456");
      lcd.print(" Sensor Warmup  ");  
+     */
 //delay(60000);
 }
 
@@ -52,10 +54,12 @@ void loop() {
 if (wasser < 950) {
   up = digitalRead (interruptPinUp);
   if (up==0) alarm_suspend = 1;
+  /*
    lcd.setCursor(0,0);  
      lcd.print("   !!ALARM!!    ");
    lcd.setCursor(0,1);
      lcd.print(" Wassereinbruch "); 
+     */
      if (alarm_suspend == 1) { 
       noTone(buzzer);
       }
@@ -69,12 +73,13 @@ else noTone(buzzer);
 if (luft > 80)  {
   up = digitalRead (interruptPinUp);
   if (up==0) alarm_suspend = 1;
+  /*
    lcd.setCursor(0,0);  
    //lcd.print("1234567890123456");
      lcd.print("   !!ALARM!!    ");
    lcd.setCursor(0,1);
      lcd.print("  Benzin Dampf  "); 
-     
+   */  
      if (alarm_suspend == 1) { 
       noTone(buzzer);
       }
@@ -101,11 +106,13 @@ else {
  if(millis()-time > 1000)     //Has one second passed?
   {
    time = millis();           //and reset time.
+   /*
    lcd.clear();
    lcd.setCursor(0,0);  
    lcd.print(wasser);
    lcd.setCursor(0,1);
-   lcd.print(luft);    
+   lcd.print(luft); 
+   */   
  }
 }
  
