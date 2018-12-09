@@ -11,38 +11,43 @@ unsigned long time = millis();
 unsigned long time2 = millis();
 
 
-const byte interruptPinUp = 2;
-const byte interruptPinDown =3;
+const byte interruptPin = 2;
+const byte wasserLED =3;
+const byte luftLED =4;
 
-//int fastforwardUp = 0;
-//int fastforwardDown = 0;
 
 void setup() {
 
   
- pinMode(interruptPinUp, INPUT);
- pinMode(interruptPinDown, INPUT);
- digitalWrite(interruptPinUp, HIGH);
- digitalWrite(interruptPinDown, HIGH);
+ pinMode(interruptPin, INPUT);
+ pinMode(wasserLED, OUTPUT);
+ pinMode(luftLED, OUTPUT);
+ digitalWrite(interruptPin, HIGH);
+ digitalWrite(wasserLED, HIGH);
+ digitalWrite(luftLED, HIGH);
  
 
   pinMode(buzzer, OUTPUT);
   Serial.begin(9600);
 
-//delay(60000);
+delay(60000);
+ digitalWrite(wasserLED, LOW);
+ digitalWrite(luftLED, LOW);
 }
 
 void loop() {
  
  wasser = analogRead(analogPin0); 
  luft = analogRead(analogPin1); 
- up = digitalRead (interruptPinUp);
+ up = digitalRead (interruptPin);
 
 //Wasser Alarm 
 if (wasser < 950) {
-  up = digitalRead (interruptPinUp);
+  up = digitalRead (interruptPin);
   if (up==0) alarm_suspend = 1;
-  //Alarm
+  
+  digitalWrite(wasserLED, HIGH);
+  
      if (alarm_suspend == 1) { 
       noTone(buzzer);
       }
@@ -50,13 +55,18 @@ if (wasser < 950) {
       alarm1();
      }
     }
-else noTone(buzzer);
+else {
+  digitalWrite(wasserLED, LOW);
+  noTone(buzzer);
+}
 
 // Luft Alarm
 if (luft > 80)  {
-  up = digitalRead (interruptPinUp);
+  up = digitalRead (interruptPin);
   if (up==0) alarm_suspend = 1;
-  //Alarm 
+
+  digitalWrite(luftLED, HIGH);
+  
      if (alarm_suspend == 1) { 
       noTone(buzzer);
       }
@@ -65,26 +75,9 @@ if (luft > 80)  {
      }
    
 }
-else noTone(buzzer);
-
-
-
-
-
-
-if (wasser < 950 || luft > 80) 
-{ //nichts machen während ses Alarmes
-  }
-
 else {
-
-
-// display alle sekunde refresh
- if(millis()-time > 1000)     //Has one second passed?
-  {
-   time = millis();           //and reset time.
-   //nix machen 
- }
+  digitalWrite(luftLED, LOW);
+  noTone(buzzer);
 }
  
 // Alarmsuspendierung nach 60s zurücksetzen
@@ -93,10 +86,6 @@ if(alarm_suspend == 1 && millis()-time2 > 60000)
  time2 = millis();   
  alarm_suspend = 0;
 }
-
-
- 
-
 }
 
 void alarm1() {
