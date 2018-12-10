@@ -17,6 +17,7 @@ const byte luftLED =4;
 
 
 void setup() {
+ 
 
   
  pinMode(interruptPin, INPUT);
@@ -29,8 +30,8 @@ void setup() {
 
   pinMode(buzzer, OUTPUT);
   Serial.begin(9600);
-
-delay(60000);
+Serial.print ("warmup");
+//delay(60000);
  digitalWrite(wasserLED, LOW);
  digitalWrite(luftLED, LOW);
 }
@@ -40,11 +41,15 @@ void loop() {
  wasser = analogRead(analogPin0); 
  luft = analogRead(analogPin1); 
  up = digitalRead (interruptPin);
-
+ 
+Serial.print ("Wasser: ");
+Serial.print (wasser);
+Serial.print ("   Luft: ");
+Serial.println (luft);
 //Wasser Alarm 
 if (wasser < 950) {
   up = digitalRead (interruptPin);
-  if (up==0) alarm_suspend = 1;
+  //if (up==0) alarm_suspend = 1;
   
   digitalWrite(wasserLED, HIGH);
   
@@ -63,7 +68,7 @@ else {
 // Luft Alarm
 if (luft > 80)  {
   up = digitalRead (interruptPin);
-  if (up==0) alarm_suspend = 1;
+  //if (up==0) alarm_suspend = 1;
 
   digitalWrite(luftLED, HIGH);
   
