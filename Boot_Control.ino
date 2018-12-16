@@ -1,4 +1,20 @@
 
+// Include the libraries we need
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+// Data wire is plugged into port 2 on the Arduino
+#define ONE_WIRE_BUS 2
+#define TEMPERATURE_PRECISION 9
+
+// Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
+OneWire oneWire(ONE_WIRE_BUS);
+
+// Pass our oneWire reference to Dallas Temperature. 
+DallasTemperature sensors(&oneWire);
+
+
+
 
 int analogPin0 = 1;
 int analogPin1 = 0;
@@ -6,25 +22,26 @@ int wasser=0;
 int luft=0;
 int up=1;
 int alarm_suspend = 0;
-const int buzzer =  5;     
+int alarmgesetzt =0;
+
 
 unsigned long time2 = millis(); //suspend timer
 unsigned long time3 = millis(); // NMEA ausgabe
 
 
 
-const byte interruptPin = 2;
+const byte interruptPin = 0;
 const byte wasserLED =3;
 const byte luftLED =4;
+const int buzzer =  5;
 
 
-const byte buff_size = 80; // buffer size must be a constant variable
-char buffer[buff_size];
 
 byte CRC = 0;
 boolean data_end = false; // Here we will keep track of EOT (End Of Transmission).
 String WasserTemperatur="$IIMTW,";
 String LuftTemperatur="$IIMTA,";
+String XDR="$IIXDR,";
 String ende=",C*";
 String NMEA="";
 float MTW=23.5;
@@ -47,30 +64,45 @@ void setup() {
  
 
   pinMode(buzzer, OUTPUT);
+  digitalWrite(buzzer, HIGH);
   Serial.begin(9600);
-  Serial.print ("warmup");
+  Serial.println ("warmup");
 //delay(60000);
  digitalWrite(wasserLED, LOW);
  digitalWrite(luftLED, LOW);
 
+ Serial.println("Dallas Temperature IC Control Library Demo");
+
+  // Start up the library
+  sensors.begin();
+
+  
+  
+}
 
  
-}
+
 
 void loop() {
  
  wasser = analogRead(analogPin0); 
  luft = analogRead(analogPin1); 
  up = digitalRead (interruptPin);
-Serial.print (" Wasser: ");
-Serial.print (wasser);
-Serial.print ("   Luft: ");
-Serial.println (luft);
+
 
 
 // NMEA Ausgabe Basteln alle 1s
 if( millis()-time3 > 1000)   
   {
+
+ 
+  sensors.requestTemperatures();
+  
+  
+  float MTA = sensors.getTempCByIndex(0);
+  float MTW = sensors.getTempCByIndex(1);
+
+    
  time3 = millis(); 
  NMEA=WasserTemperatur+MTW+ende;
  StringLength = NMEA.length();  
@@ -78,9 +110,14 @@ if( millis()-time3 > 1000)
  NMEA=LuftTemperatur+MTA+ende;
  StringLength = NMEA.length();  
  NMEA_Ausgabe();
-}
 
+ NMEA=XDR+","+wasser+",,Wasser Alarm*";
+ StringLength = NMEA.length();  
+ NMEA_Ausgabe();
 
+ NMEA=XDR+","+luft+",,Luft Alarm*";
+ StringLength = NMEA.length();  
+ NMEA_Ausgabe();
 
 //Wasser Alarm 
 if (wasser < 950) {
@@ -93,16 +130,11 @@ if (wasser < 950) {
       noTone(buzzer);
       }
      else {
-      alarm1();
-     }
+      
+        tone(buzzer,1200);
+      }
     }
-else {
-  digitalWrite(wasserLED, LOW);
-  noTone(buzzer);
-}
-
-// Luft Alarm
-if (luft > 80)  {
+else if (luft > 180)  {
   up = digitalRead (interruptPin);
   //if (up==0) alarm_suspend = 1;
 
@@ -112,37 +144,39 @@ if (luft > 80)  {
       noTone(buzzer);
       }
      else {
-      alarm2();
+      tone(buzzer,2000);
      }
    
-}
+} 
+
+// Luft Alarm
+
 else {
+  digitalWrite(wasserLED, LOW);
   digitalWrite(luftLED, LOW);
   noTone(buzzer);
+  
 }
+
+
+
+ 
+}
+
+
+
+
  
 // Alarmsuspendierung nach 60s zurücksetzen
 if(alarm_suspend == 1 && millis()-time2 > 60000)   
   {
  time2 = millis();   
  alarm_suspend = 0;
+ 
 }
 }
 
-void alarm1() {
- tone(buzzer,1000);
- delay (20);
- tone(buzzer,1200);
- delay (20);
- 
-} 
-void alarm2() {
-  tone(buzzer,2000);
- delay (20);
- tone(buzzer,2200);
- delay (20);
- 
-} 
+
 
 
 
@@ -159,17 +193,11 @@ void NMEA_Ausgabe() {
     CRC = 0; // reset CRC variable
     
       }
-
-
-
-
-
-
-
-
   
 }
   
+
+
 
 
 
