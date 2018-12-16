@@ -7,13 +7,31 @@ int luft=0;
 int up=1;
 int alarm_suspend = 0;
 const int buzzer =  5;     
-unsigned long time = millis();
-unsigned long time2 = millis();
+
+unsigned long time2 = millis(); //suspend timer
+unsigned long time3 = millis(); // NMEA ausgabe
+
 
 
 const byte interruptPin = 2;
 const byte wasserLED =3;
 const byte luftLED =4;
+
+
+const byte buff_size = 80; // buffer size must be a constant variable
+char buffer[buff_size];
+
+byte CRC = 0;
+boolean data_end = false; // Here we will keep track of EOT (End Of Transmission).
+String WasserTemperatur="$IIMTW,";
+String LuftTemperatur="$IIMTA,";
+String ende=",C*";
+String NMEA="";
+float MTW=23.5;
+float MTA=-10.3;
+
+unsigned int StringLength = NMEA.length();
+
 
 
 void setup() {
@@ -30,10 +48,13 @@ void setup() {
 
   pinMode(buzzer, OUTPUT);
   Serial.begin(9600);
-Serial.print ("warmup");
+  Serial.print ("warmup");
 //delay(60000);
  digitalWrite(wasserLED, LOW);
  digitalWrite(luftLED, LOW);
+
+
+ 
 }
 
 void loop() {
@@ -41,11 +62,26 @@ void loop() {
  wasser = analogRead(analogPin0); 
  luft = analogRead(analogPin1); 
  up = digitalRead (interruptPin);
- 
-Serial.print ("Wasser: ");
+Serial.print (" Wasser: ");
 Serial.print (wasser);
 Serial.print ("   Luft: ");
 Serial.println (luft);
+
+
+// NMEA Ausgabe Basteln alle 1s
+if( millis()-time3 > 1000)   
+  {
+ time3 = millis(); 
+ NMEA=WasserTemperatur+MTW+ende;
+ StringLength = NMEA.length();  
+ NMEA_Ausgabe();
+ NMEA=LuftTemperatur+MTA+ende;
+ StringLength = NMEA.length();  
+ NMEA_Ausgabe();
+}
+
+
+
 //Wasser Alarm 
 if (wasser < 950) {
   up = digitalRead (interruptPin);
@@ -106,7 +142,34 @@ void alarm2() {
  tone(buzzer,2200);
  delay (20);
  
-}   
+} 
+
+
+
+void NMEA_Ausgabe() {
+  for (byte x = 1; x<(StringLength-1); x++){ // XOR every character in between '$' and '*'
+     
+      CRC = CRC ^ NMEA[x] ;
+      //Serial.println(NMEA[x]);
+    }
+  
+  if(CRC > 0){
+    Serial.print (NMEA);
+    Serial.println(CRC,HEX); // print calculated CS in HEX format.
+    CRC = 0; // reset CRC variable
+    
+      }
+
+
+
+
+
+
+
+
+  
+}
+  
 
 
 
